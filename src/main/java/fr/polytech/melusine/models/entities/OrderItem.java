@@ -8,7 +8,7 @@ import javax.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "orderItems")
+@Table(name = "order_items")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

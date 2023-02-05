@@ -15,6 +15,7 @@ import fr.polytech.melusine.models.entities.Order;
 import fr.polytech.melusine.models.entities.OrderItem;
 import fr.polytech.melusine.models.entities.Product;
 import fr.polytech.melusine.models.entities.User;
+import fr.polytech.melusine.models.enums.Category;
 import fr.polytech.melusine.models.enums.OrderStatus;
 import fr.polytech.melusine.repositories.*;
 import io.jsonwebtoken.lang.Strings;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -138,6 +140,15 @@ public class OrderService {
         Order createdOrder = orderRepository.save(finalOrder);
         log.debug("End of order creation");
 
+        List<OrderItem> drinks = items.stream()
+                .filter(item -> item.getProduct().getCategory() == Category.BOISSON)
+                .collect(Collectors.toList());
+
+        drinks.forEach(drink -> {
+            OrderItemRequest request = new OrderItemRequest();
+            request.setStatus(OrderStatus.DELIVER);
+            updateOrderStatus(drink.getId(), request);
+        });
 
         return orderMapper.mapToOrderResponse(createdOrder);
     }
@@ -190,18 +201,48 @@ public class OrderService {
         log.debug("Cancel an item from with item id : " + itemId);
 
         OrderItem orderItem = findOrderItemById(itemId);
-        ensureOrderItemIsPending(orderItem);
-
-        if (request.getStatus().equals(OrderStatus.DELIVER)) {
-            orderItem.getProduct().getIngredients().stream()
-                    .map(ingredient -> ingredient.toBuilder().quantity(ingredient.getQuantity() - 1).build())
-                    .forEach(ingredientRepository::save);
+        if (request.getStatus().equals(orderItem.getStatus())) {
+            throw new BadRequestException(OrderError.ORDER_ITEM_WRONG_STATUS, orderItem.getId(), orderItem.getStatus());
         }
+        OrderItem orderItemToUpdate;
+        if (orderItem.getStatus().equals(OrderStatus.PENDING)) {
+            if (request.getStatus().equals(OrderStatus.DELIVER)) {
+                orderItem.getProduct().getIngredients().stream()
+                        .map(ingredient -> {
+                            long quantity = ingredient.getQuantity();
+                            return ingredient.toBuilder().quantity(quantity - 1L).build();
+                        })
+                        .forEach(ingredientRepository::save);
+            }
 
-        OrderItem orderItemToUpdate = orderItem.toBuilder()
-                .status(request.getStatus())
-                .updatedAt(OffsetDateTime.now(clock))
-                .build();
+            orderItemToUpdate = orderItem.toBuilder()
+                    .status(request.getStatus())
+                    .updatedAt(OffsetDateTime.now(clock))
+                    .build();
+        } else if (orderItem.getStatus().equals(OrderStatus.DELIVER)) {
+            if (request.getStatus().equals(OrderStatus.CANCEL)) {
+                throw new BadRequestException(OrderError.ORDER_ITEM_WRONG_STATUS, orderItem.getId(), OrderStatus.CANCEL);
+            }
+            orderItem.getProduct().getIngredients().stream()
+                    .map(ingredient -> {
+                        long quantity = ingredient.getQuantity();
+                        return ingredient.toBuilder().quantity(quantity + 1L).build();
+                    })
+                    .forEach(ingredientRepository::save);
+
+            orderItemToUpdate = orderItem.toBuilder()
+                    .status(request.getStatus())
+                    .updatedAt(OffsetDateTime.now(clock))
+                    .build();
+        } else {
+            if (request.getStatus().equals(OrderStatus.DELIVER)) {
+                throw new BadRequestException(OrderError.ORDER_ITEM_WRONG_STATUS, orderItem.getId(), OrderStatus.DELIVER);
+            }
+            orderItemToUpdate = orderItem.toBuilder()
+                    .status(request.getStatus())
+                    .updatedAt(OffsetDateTime.now(clock))
+                    .build();
+        }
 
         OrderItem updatedOrderItem = orderItemRepository.save(orderItemToUpdate);
 
@@ -265,15 +306,34 @@ public class OrderService {
         }
     }
 
-    private void ensureOrderItemIsPending(OrderItem orderItem) {
-        if (!orderItem.getStatus().equals(OrderStatus.PENDING)) {
-            throw new BadRequestException(OrderError.ORDER_ITEM_IS_NOT_PENDING, orderItem.getId());
-        }
-    }
-
     public Page<OrderItemResponse> getOrderItems(Pageable pageable) {
         log.debug("Find all order items");
-        return orderItemRepository.findAllByStatus(pageable, OrderStatus.PENDING).map(orderItemMapper::mapToOrderItemResponse);
+        return orderItemRepository.findAllByStatus(pageable, OrderStatus.PENDING)
+                .map(orderItemMapper::mapToOrderItemResponse);
+    }
+
+    public List<OrderItemResponse> getLastOrderItemsByUserId(String userId) {
+        User user = findUserById(userId);
+
+        OffsetDateTime now = OffsetDateTime.now(clock);
+        OffsetDateTime start = now.minus(18, ChronoUnit.HOURS);
+        log.debug("Find last order items not pending from : " + start + " to " + now + " with user ID : " + userId);
+        List<Order> deliverOrdersFromToday = orderRepository.findByUserAndCreatedAtBetween(user, now, start);
+
+        return deliverOrdersFromToday.stream()
+                .map(Order::getItems)
+                .flatMap(List::stream)
+                .map(orderItemMapper::mapToOrderItemResponse)
+                .filter(orderItem -> orderItem.getStatus() != OrderStatus.PENDING)
+                .collect(Collectors.toList());
+    }
+
+    public Page<OrderItemResponse> getLastOrderItems(Pageable pageable) {
+        OffsetDateTime now = OffsetDateTime.now(clock);
+        OffsetDateTime start = now.minus(18, ChronoUnit.HOURS);
+        log.debug("Find last order items not pending from : " + start + " to " + now);
+        return orderItemRepository.findByStatusNotAndUpdatedAtBetween(pageable, OrderStatus.PENDING, start, now)
+                .map(orderItemMapper::mapToOrderItemResponse);
     }
 
 }

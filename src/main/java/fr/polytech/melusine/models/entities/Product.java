@@ -35,7 +35,6 @@ public class Product {
             inverseJoinColumns = {@JoinColumn(name = "ingredient_id")}
     )
     private List<Ingredient> ingredients;
-
     @Column(columnDefinition = "LONGBLOB")
     private String image;
 

@@ -5,7 +5,7 @@ public enum OrderError implements ErrorCode {
     INVALID_ORDER("OR0001", "La commande n'a pas d'item"),
     ORDER_NOT_FOUND("OR0002", "La commande avec l'ID : %s est introuvable"),
     ORDER_ITEM_NOT_FOUND("OR0003", "L'item de commande avec l'ID : %s est introuvable"),
-    ORDER_ITEM_IS_NOT_PENDING("OR0004", "TL'item de commande avec l'ID : %s est déjà livré ou annulé");
+    ORDER_ITEM_WRONG_STATUS("OR0004", "L'item de commande avec l'ID : %s est déjà dans ce statut : %s");
 
     private final String code;
     private final String description;

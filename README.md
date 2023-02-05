@@ -61,3 +61,7 @@ Features:
 - Ajouter les statistiques consommation
 - Ajouter l'import csv des clients
 - Ajouter l'export csv des clients
+
+### Release 2.1.0
+- Récupérer l'historique des derniers produits commandés
+- Récupérer l'historique des derniers produits commandés par un utilisateurs

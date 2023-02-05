@@ -35,7 +35,7 @@ public class UserController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<UserResponse> getUsers(
-            @PageableDefault(size = 50, page = 0, sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(size = 20, page = 0, sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return userService.getUsers(pageable);
     }

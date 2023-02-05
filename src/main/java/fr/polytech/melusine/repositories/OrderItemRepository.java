@@ -21,7 +21,8 @@ public interface OrderItemRepository extends CrudRepository<OrderItem, String> {
      */
     Page<OrderItem> findAllByStatus(Pageable pageable, OrderStatus status);
 
-
     List<OrderItem> findByCreatedAtBetweenAndStatusAndProductCategoryIsIn(OffsetDateTime start, OffsetDateTime now, OrderStatus status, List<Category> categories);
+
+    Page<OrderItem> findByStatusNotAndUpdatedAtBetween(Pageable pageable, OrderStatus orderStatus, OffsetDateTime start, OffsetDateTime now);
 
 }

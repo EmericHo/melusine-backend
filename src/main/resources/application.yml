@@ -4,6 +4,7 @@ spring.datasource:
   password: root
   initialization-mode: never #always
   sqlScriptEncoding: UTF-8
+  data: data.sql
 
 spring.jpa:
   properties.hibernate.dialect: org.hibernate.dialect.MySQL5Dialect

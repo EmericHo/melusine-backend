@@ -3,6 +3,8 @@ package fr.polytech.melusine.repositories;
 import fr.polytech.melusine.models.entities.Order;
 import fr.polytech.melusine.models.entities.User;
 import fr.polytech.melusine.models.enums.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.time.OffsetDateTime;
@@ -13,5 +15,7 @@ public interface OrderRepository extends PagingAndSortingRepository<Order, Strin
     void deleteByUser(User user);
 
     List<Order> findByCreatedAtBetweenAndStatus(OffsetDateTime start, OffsetDateTime now, OrderStatus status);
+
+    List<Order> findByUserAndCreatedAtBetween(User user, OffsetDateTime start, OffsetDateTime now);
 
 }
