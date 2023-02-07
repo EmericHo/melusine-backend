@@ -1,13 +1,15 @@
 spring.datasource:
-  url: jdbc:$DATABASE_URL #jdbc:mysql://localhost:3306/melusine
+  url: jdbc:mariadb:$DATABASE_URL #jdbc:mysql://localhost:3306/melusine
   username: root
   password: root
   initialization-mode: never #always
   sqlScriptEncoding: UTF-8
   data: data.sql
+  driver-class-name: org.mariadb.jdbc.Driver
 
 spring.jpa:
-  properties.hibernate.dialect: org.hibernate.dialect.MySQL5Dialect
+  database-platform: org.hibernate.dialect.MariaDB53Dialect
+  properties.hibernate.dialect: org.hibernate.dialect.MariaDB53Dialect
   generate-ddl: true
   hibernate.ddl-auto: none #create
   show-sql: false
