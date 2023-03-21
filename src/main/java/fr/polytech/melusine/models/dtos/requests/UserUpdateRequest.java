@@ -16,4 +16,6 @@ public class UserUpdateRequest {
 
     private Section section;
 
+    private Boolean isMembership;
+
 }

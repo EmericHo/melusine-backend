@@ -67,7 +67,7 @@ public class UserService {
         if (userRepository.existsByFirstNameAndLastNameAndSection(firstName, lastName, userRegistrationRequest.getSection()))
             throw new ConflictException(UserError.CONFLICT, firstName, lastName, userRegistrationRequest.getSection());
         long requestedCredit = formatToLong(userRegistrationRequest.getCredit());
-        long credit = requestedCredit + getMembershipBonus(requestedCredit);
+        long credit = userRegistrationRequest.isMembership() ? requestedCredit + getMembershipBonus(requestedCredit) : requestedCredit ;
         User user = User.builder()
                 .firstName(firstName)
                 .lastName(lastName)
@@ -135,7 +135,14 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(UserError.NOT_FOUND, userId));
 
         long requestedCredit = formatToLong(request.getCredit());
-        long newCredit = user.getCredit() + requestedCredit + getMembershipBonus(requestedCredit);
+        long newCredit;
+
+        if (user.isMembership()) {
+            newCredit = user.getCredit() + requestedCredit + getMembershipBonus(requestedCredit);
+        } else {
+            newCredit = user.getCredit() + requestedCredit;
+        }
+
         User updatedUser = userRepository.save(user.toBuilder()
                 .credit(newCredit)
                 .updatedAt(OffsetDateTime.now(clock))
@@ -173,6 +180,7 @@ public class UserService {
                 .lastName(lastName)
                 .nickName(nickName)
                 .section(request.getSection())
+                .isMembership(Objects.nonNull(request.getIsMembership()) ? request.getIsMembership() : user.isMembership() )
                 .build();
 
         User savedUser = userRepository.save(updatedUser);
