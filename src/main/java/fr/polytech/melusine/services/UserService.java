@@ -193,11 +193,9 @@ public class UserService {
         log.info("Deletion of order for user with ID: " + id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(UserError.NOT_FOUND, id));
-        orderRepository.deleteByUser(user);
         log.info("Deletion of user with ID:" + id);
         accountRepository.deleteByUser(user);
         userRepository.deleteById(user.getId());
-
     }
 
 }
