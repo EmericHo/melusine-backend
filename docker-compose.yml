@@ -4,7 +4,8 @@ version: '3.1'
 services:
 
   melusinedb:
-    image: mysql:5.7
+    image: mariadb:latest
+    platform: linux/arm64/v8
     container_name: melusinedb
     restart: unless-stopped
     environment:
@@ -15,12 +16,17 @@ services:
     volumes:
       - melusinedb-data:/var/lib/mysql
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog_smtp
+  react-app:
+    image: node:14
+    platform: linux/arm64
+    container_name: react-app-container
+    restart: unless-stopped
+    working_dir: /app
+    command: npm start
+    volumes:
+      - ../../front/melusine-frontend:/app
     ports:
-      - 1025:1025
-      - 8025:8025
+      - "3000:3000"
 
 volumes:
   melusinedb-data:

@@ -1,5 +1,6 @@
 package fr.polytech.melusine.repositories;
 
+import fr.polytech.melusine.models.entities.Order;
 import fr.polytech.melusine.models.entities.OrderItem;
 import fr.polytech.melusine.models.enums.Category;
 import fr.polytech.melusine.models.enums.OrderStatus;
@@ -20,6 +21,8 @@ public interface OrderItemRepository extends CrudRepository<OrderItem, String> {
      * @return a page of OrderItem
      */
     Page<OrderItem> findAllByStatus(Pageable pageable, OrderStatus status);
+
+    void deleteByOrder(Order order);
 
     List<OrderItem> findByCreatedAtBetweenAndStatusAndProductCategoryIsIn(OffsetDateTime start, OffsetDateTime now, OrderStatus status, List<Category> categories);
 

@@ -9,10 +9,13 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends PagingAndSortingRepository<Order, String> {
 
     void deleteByUser(User user);
+
+    List<Order> findAllByUser(User user);
 
     List<Order> findByCreatedAtBetweenAndStatus(OffsetDateTime start, OffsetDateTime now, OrderStatus status);
 

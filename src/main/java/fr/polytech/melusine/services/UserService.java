@@ -12,8 +12,10 @@ import fr.polytech.melusine.models.dtos.requests.UserRegistrationRequest;
 import fr.polytech.melusine.models.dtos.requests.UserUpdateRequest;
 import fr.polytech.melusine.models.dtos.responses.UserResponse;
 import fr.polytech.melusine.models.entities.Account;
+import fr.polytech.melusine.models.entities.Order;
 import fr.polytech.melusine.models.entities.User;
 import fr.polytech.melusine.repositories.AccountRepository;
+import fr.polytech.melusine.repositories.OrderItemRepository;
 import fr.polytech.melusine.repositories.OrderRepository;
 import fr.polytech.melusine.repositories.UserRepository;
 import io.jsonwebtoken.lang.Strings;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import static fr.polytech.melusine.utils.AuthenticatedFinder.ensureAuthenticatedUserIsAdmin;
@@ -41,16 +44,18 @@ public class UserService {
     private PasswordService passwordService;
     private UserMapper userMapper;
     private OrderRepository orderRepository;
+    private OrderItemRepository orderItemRepository;
     private Clock clock;
 
 
     public UserService(UserRepository userRepository, AccountRepository accountRepository, PasswordService passwordService,
-                       UserMapper userMapper, OrderRepository orderRepository, Clock clock) {
+                       UserMapper userMapper, OrderRepository orderRepository, OrderItemRepository orderItemRepository, Clock clock) {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.passwordService = passwordService;
         this.userMapper = userMapper;
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.clock = clock;
     }
 
@@ -194,6 +199,9 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(UserError.NOT_FOUND, id));
         log.info("Deletion of user with ID:" + id);
+        List<Order> orders = orderRepository.findAllByUser(user);
+        orders.forEach(order -> orderItemRepository.deleteByOrder(order));
+        orderRepository.deleteByUser(user);
         accountRepository.deleteByUser(user);
         userRepository.deleteById(user.getId());
     }
