@@ -97,8 +97,6 @@ public class SpringSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
                 .antMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
 
-                .antMatchers(HttpMethod.POST, "/users").permitAll()
-
                 .antMatchers(HttpMethod.GET, "/orders/items").permitAll()
 
                 // All other requests need to be authenticated
